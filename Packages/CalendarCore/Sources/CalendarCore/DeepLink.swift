@@ -1,6 +1,6 @@
 import Foundation
 
-/// `tempo://today`, `tempo://day/2026-11-25`, `tempo://event/<id>`, `tempo://set/<uuid>`, `tempo://add?text=...`
+/// `tempo://today`, `tempo://day/2026-11-25`, `tempo://event/<id>`, `tempo://set/<uuid>`, `tempo://add?text=...`, `tempo://settings`, `tempo://widgets`
 public enum DeepLink: Equatable, Sendable {
     case today
     case day(String)          // yyyy-MM-dd
@@ -8,6 +8,7 @@ public enum DeepLink: Equatable, Sendable {
     case set(UUID)
     case add(String?)
     case settings
+    case widgets              // opens Settings on the custom-widgets screen
 
     public var url: URL {
         var c = URLComponents()
@@ -15,6 +16,7 @@ public enum DeepLink: Equatable, Sendable {
         switch self {
         case .today: c.host = "today"
         case .settings: c.host = "settings"
+        case .widgets: c.host = "widgets"
         case .day(let d): c.host = "day"; c.path = "/" + d
         case .event(let id): c.host = "event"; c.path = "/" + id.replacingOccurrences(of: "/", with: "%2F")
         case .set(let id): c.host = "set"; c.path = "/" + id.uuidString
@@ -29,6 +31,7 @@ public enum DeepLink: Equatable, Sendable {
         switch url.host {
         case "today": self = .today
         case "settings": self = .settings
+        case "widgets": self = .widgets
         case "day": guard let arg, Self.isISODay(arg) else { return nil }; self = .day(arg)
         case "event": guard let arg, !arg.isEmpty else { return nil }; self = .event(arg)
         case "set": guard let arg, let id = UUID(uuidString: arg) else { return nil }; self = .set(id)

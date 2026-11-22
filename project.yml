@@ -62,6 +62,7 @@ targets:
     info:
       path: Config/TempoMac-Info.plist
       properties:
+        TempoAppGroup: "$(TeamIdentifierPrefix)group.com.local.tempo"
         CFBundleDisplayName: Tempo
         LSApplicationCategoryType: public.app-category.productivity
         NSCalendarsFullAccessUsageDescription: Tempo shows and edits your events on this Mac. Nothing leaves your device.
@@ -74,7 +75,7 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.personal-information.calendars: true
-        com.apple.security.application-groups: [group.com.local.tempo]
+        com.apple.security.application-groups: ["$(TeamIdentifierPrefix)group.com.local.tempo"]
 
   # Menu-bar helper: separate background process (no Dock icon) that owns the status item, so it survives quitting the main app.
   TempoMenuBar:
@@ -94,6 +95,7 @@ targets:
     info:
       path: Config/TempoMenuBar-Info.plist
       properties:
+        TempoAppGroup: "$(TeamIdentifierPrefix)group.com.local.tempo"
         CFBundleDisplayName: Tempo Menu Bar
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.productivity
@@ -104,7 +106,7 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.personal-information.calendars: true
-        com.apple.security.application-groups: [group.com.local.tempo]
+        com.apple.security.application-groups: ["$(TeamIdentifierPrefix)group.com.local.tempo"]
 
   TempoMacWidgets:
     type: app-extension
@@ -122,6 +124,7 @@ targets:
     info:
       path: Config/TempoMacWidgets-Info.plist
       properties:
+        TempoAppGroup: "$(TeamIdentifierPrefix)group.com.local.tempo"
         CFBundleDisplayName: Tempo Widgets
         NSCalendarsFullAccessUsageDescription: Tempo widgets show your upcoming events.
         NSExtension:
@@ -131,7 +134,7 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.personal-information.calendars: true
-        com.apple.security.application-groups: [group.com.local.tempo]
+        com.apple.security.application-groups: ["$(TeamIdentifierPrefix)group.com.local.tempo"]
 
   # ───────────────────────── iOS ─────────────────────────
   TempoIOS:

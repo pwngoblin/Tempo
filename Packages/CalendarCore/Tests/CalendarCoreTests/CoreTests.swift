@@ -91,7 +91,7 @@ final class SetAndLinkTests: XCTestCase {
     }
     func testDeepLinkRoundTrip() {
         let id = UUID()
-        for link in [DeepLink.today, .settings, .day("2026-11-25"), .event("AB12/CD"), .set(id), .add("Gym tomorrow 6pm")] {
+        for link in [DeepLink.today, .settings, .widgets, .day("2026-11-25"), .event("AB12/CD"), .set(id), .add("Gym tomorrow 6pm")] {
             XCTAssertEqual(DeepLink(url: link.url), link, "\(link.url)")
         }
         XCTAssertNil(DeepLink(url: URL(string: "https://example.com")!))

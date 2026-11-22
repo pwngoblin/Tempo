@@ -54,3 +54,6 @@ The helper reads the same App Group prefs (polled every 3 s) and talks to the ma
 ## Concurrency notes
 Package is built in Swift 5 language mode (`swiftLanguageMode(.v5)`) and apps use `SWIFT_VERSION 5.0`. `EventReader` is
 `@unchecked Sendable` (EKEventStore is thread-safe for reads). `WatchLink` is `@MainActor`; delegate callbacks hop with `Task { @MainActor in }`.
+
+## App Group on macOS
+Mac targets use `$(TeamIdentifierPrefix)group.com.local.tempo` (a plain `group.` id isn't granted to a sandboxed Mac app by the automatic profile). The id is injected into Info.plist (`TempoAppGroup`) and read by `AppGroup.identifier`; iOS and watchOS keep `group.com.local.tempo`. An unsigned build (empty team) falls back to the plain id.

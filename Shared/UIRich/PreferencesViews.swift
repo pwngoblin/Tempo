@@ -217,24 +217,27 @@ struct SettingsView: View {
     enum Page: Hashable { case appearance, layout, views, newEvents, calendars, sets, subscriptions, customWidgets }
     var start: Page?
     @State private var path: [Page] = []
+    #if os(macOS)
+    @AppStorage("tempo.settingsTab") private var tab = "general"
+    #endif
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         #if os(macOS)
-        TabView {
+        TabView(selection: $tab) {
             Form { AppearanceSection(); NewEventsSection(); ResetSection() }.formStyle(.grouped)
-                .tabItem { Label("General", systemImage: "gearshape") }
+                .tabItem { Label("General", systemImage: "gearshape") }.tag("general")
             Form { ViewsSection() }.formStyle(.grouped)
-                .tabItem { Label("Views", systemImage: "rectangle.split.3x1") }
+                .tabItem { Label("Views", systemImage: "rectangle.split.3x1") }.tag("views")
             Form { LayoutSection() }.formStyle(.grouped)
-                .tabItem { Label("Layout", systemImage: "rectangle.grid.1x2") }
+                .tabItem { Label("Layout", systemImage: "rectangle.grid.1x2") }.tag("layout")
             Form { MenuBarSection() }.formStyle(.grouped)
-                .tabItem { Label("Menu Bar", systemImage: "menubar.rectangle") }
+                .tabItem { Label("Menu Bar", systemImage: "menubar.rectangle") }.tag("menubar")
             Form { CalendarVisibilitySection() }.formStyle(.grouped)
-                .tabItem { Label("Calendars", systemImage: "calendar") }
-            SetsEditorView().tabItem { Label("Sets", systemImage: "square.stack") }
-            CustomWidgetsView().tabItem { Label("Widgets", systemImage: "square.grid.2x2") }
-            SubscriptionsView().tabItem { Label("Subscriptions", systemImage: "dot.radiowaves.up.forward") }
+                .tabItem { Label("Calendars", systemImage: "calendar") }.tag("calendars")
+            SetsEditorView().tabItem { Label("Sets", systemImage: "square.stack") }.tag("sets")
+            CustomWidgetsView().tabItem { Label("Widgets", systemImage: "square.grid.2x2") }.tag("widgets")
+            SubscriptionsView().tabItem { Label("Subscriptions", systemImage: "dot.radiowaves.up.forward") }.tag("subscriptions")
         }
         .frame(width: 600, height: 560)
         #else

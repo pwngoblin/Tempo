@@ -15,39 +15,36 @@ struct CustomWidgetsView: View {
     private var store: SpecStore { TempoSpecStore.shared }
 
     var body: some View {
-        List {
-            Section {
-                ForEach(specs) { spec in
-                    Button { edit(spec) } label: {
-                        HStack(spacing: 12) {
-                            thumbnail(spec)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(spec.name).font(.body.weight(.medium))
-                                Text("Tap to edit").font(.caption).foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-                        }.contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button("Edit", systemImage: "pencil") { edit(spec) }
-                        Button("Duplicate", systemImage: "plus.square.on.square") { duplicate(spec) }
-                        Button("Delete", systemImage: "trash", role: .destructive) { delete(spec) }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 26) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Design your own widgets").font(.title2.weight(.semibold))
+                    Text("Pick a template, restyle it in the editor, then add the **Custom** widget from the widget gallery and choose your design. Data comes from your active Calendar Set and never leaves your device.")
+                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+
+                if !specs.isEmpty {
+                    section("Your widgets") {
+                        ForEach(specs) { spec in
+                            card(spec, subtitle: "Tap to edit") { edit(spec) }
+                                .contextMenu {
+                                    Button("Edit", systemImage: "pencil") { edit(spec) }
+                                    Button("Duplicate", systemImage: "plus.square.on.square") { duplicate(spec) }
+                                    Button("Delete", systemImage: "trash", role: .destructive) { delete(spec) }
+                                }
+                        }
                     }
                 }
-                .onDelete { idx in idx.map { specs[$0] }.forEach(delete) }
-                Menu {
-                    ForEach(SpecTemplates.all) { t in Button(t.name) { create(from: t) } }
-                } label: { Label("New Widget", systemImage: "plus.circle.fill") }
-            } header: { Text("Your widgets") } footer: {
-                Text("Design a layout here, then add the **Custom** widget from the widget gallery and choose it. Data comes from your active Calendar Set; nothing leaves your device.")
+
+                section(specs.isEmpty ? "Start with a template" : "New from a template") {
+                    ForEach(SpecTemplates.all) { t in card(t, subtitle: "Use this template") { create(from: t) } }
+                }
+
+                if let error { Text(error).foregroundStyle(.red).font(.footnote) }
             }
-            if let error { Section { Text(error).foregroundStyle(.red).font(.footnote) } }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        #if os(macOS)
-        .listStyle(.inset)
-        #endif
         .navigationTitle("Custom Widgets")
         .onAppear(perform: reload)
         #if !os(macOS)
@@ -58,13 +55,28 @@ struct CustomWidgetsView: View {
         #endif
     }
 
-    private func thumbnail(_ spec: WidgetSpec) -> some View {
-        SpecView(spec: spec, context: SpecTemplates.sample())
-            .padding(10).frame(width: 158, height: 158, alignment: .topLeading)
-            .scaleEffect(0.34, anchor: .topLeading).frame(width: 54, height: 54, alignment: .topLeading)
-            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .accessibilityHidden(true)
+    private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title).font(.headline)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 190), spacing: 16, alignment: .top)], alignment: .leading, spacing: 18, content: content)
+        }
+    }
+
+    private func card(_ spec: WidgetSpec, subtitle: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 6) {
+                SpecView(spec: spec, context: SpecTemplates.sample())
+                    .padding(12).frame(width: 158, height: 158, alignment: .topLeading)
+                    .background(SpecBackground(spec: spec))
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
+                    .allowsHitTesting(false)
+                Text(spec.name).font(.subheadline.weight(.medium)).lineLimit(1)
+                Text(subtitle).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(spec.name). \(subtitle)")
     }
 
     private func reload() { specs = store.load() }

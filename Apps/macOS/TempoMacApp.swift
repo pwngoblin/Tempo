@@ -68,6 +68,7 @@ final class Navigator {
         case .set(let id): manager.setActive(id)
         case .add: showQuickAdd = true
         case .settings: settingsRequest += 1
+        case .widgets: UserDefaults.standard.set("widgets", forKey: "tempo.settingsTab"); settingsRequest += 1
         case .event(let id):
             let start = cal.startOfDay(for: date)
             if let e = manager.events(from: cal.date(byAdding: .month, value: -1, to: start)!, to: cal.date(byAdding: .month, value: 2, to: start)!)

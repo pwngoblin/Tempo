@@ -51,6 +51,7 @@ final class Navigator {
         case .day(let iso): if let d = DeepLink.date(from: iso) { date = d; mode = .week }
         case .set(let id): manager.setActive(id)
         case .settings: showSettings = true
+        case .widgets: settingsPage = .customWidgets; showSettings = true
         case .add(let t): quickAddText = t; showQuickAdd = true
         case .event(let id):
             let start = cal.startOfDay(for: date)

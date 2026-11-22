@@ -6,7 +6,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.local.tempo</string>
+		<string>$(TeamIdentifierPrefix)group.com.local.tempo</string>
 	</array>
 	<key>com.apple.security.personal-information.calendars</key>
 	<true/>
