@@ -1,39 +1,29 @@
-# Knowledge base (non-obvious findings)
+# Gotchas (read before changing things)
 
-- **EventKit is read-only on watchOS.** `EKEventStore.save/remove` are `__WATCHOS_PROHIBITED`; `EKReminder` APIs aren't used on the watch either.
-  Hence `Shared/WatchLink` (watch → phone quick-add; phone → watch sets).
-- **`AppIntentTimelineProvider` on watchOS requires `recommendations()`** (compile error otherwise); not required on iOS/macOS.
-- **`ProgressView(timerInterval:countsDown:)`** (not `countdown:`).
-- **`EKCalendar.calendarIdentifier` is device-local** → Calendar Sets also store title+source and match on either.
-- **`predicateForEvents(calendars: [])`** behaves like "no filter" in practice; `EventReader` returns `[]` itself when a set matches no calendars.
-- **NSDataDetector reports in the system time zone**, not the parser's calendar: read wall-clock parts with `match.timeZone ?? .current`, rebuild with the parser's calendar.
-- **A set's active selection is per device** (not synced); set *definitions* are (WatchConnectivity for watch, iCloud KVS optional for Mac/iPhone).
-- **iCloud KVS entitlement is restricted**: leaving it in `project.yml` would make ad-hoc/unsigned Mac launches fail, so it is not declared by default.
-  `NSUbiquitousKeyValueStore` silently no-ops without it.
-- **XcodeGen**: `Tempo.xcodeproj` and `Config/*-Info.plist` are generated and git-ignored. New files under a source folder require `xcodegen generate`.
-- **Widgets need one `containerBackground`** per view tree. `NextEventView` sets it once, switched by family; the other widgets set it on the config closure.
-- **Xcode 27.2 / SDK 27.2**; deployment targets macOS 14, iOS 17, watchOS 10 (Observation, App Intents interactivity, `WidgetConfigurationIntent`).
-- **Simulators:** `xcrun simctl privacy <udid> grant calendar <bundle id>` skips the permission prompt; a booted iPhone+Watch pair exists on this machine
-  (iPhone 17 Pro + Series 12 46mm; list ids with `xcrun simctl list devices`).
-- **EventKit cannot create subscribed calendars.** Subscribing = handing a `webcal://` URL to the system Calendar (`openURL`), which confirms with the user;
-  afterwards the calendar is an ordinary `EKCalendar` (`type == .subscription`, read-only) visible in apps, widgets and the watch. `refreshSourcesIfNecessary()` on app activation
-  picks it up (unavailable on watchOS). Plain `http://` feeds are refused by `CalendarSubscription`.
-- **Screen-capturing the Mac desktop captures everything on it.** Use `screencapture -l <windowID>` for Tempo's own window; do not drive other apps with AppleScript (it can block on a permission prompt).
-- **Never put a `TimelineView` (or any self-updating view) in a `MenuBarExtra` label.** SwiftUI re-renders the label to an image on each update; a self-updating view loops forever
-  inside `MenuBarExtraController.updateButton`, blocks `applicationDidFinishLaunching`, balloons memory (2.1 GB seen) and the main window never appears. Drive the label from an
-  `@Observable` model refreshed by a timer (`MenuBarModel`). Diagnosis: `sample <Tempo>`; check with `CGWindowListCopyWindowInfo([.optionOnScreenOnly])` (bounds ≠ 0 once a window shows).
-- **Don't use `VStack` rows with `Color.clear.frame(width:)`**: a spacer without a height is flexible vertically and steals half the space (week-grid header bug); give it a height or `.fixedSize(vertical: true)`.
-- **Observation via a `@MainActor @Observable` singleton works from `body`** (`PrefsStore.shared.values.x` re-renders on change) — no environment plumbing needed, which keeps shared leaf views usable on watchOS.
-  Non-UI code (formatters, widget providers) reads `PrefsSnapshot.current`; widget providers call `PrefsSnapshot.reload()` first because the extension process has its own copy.
-- **Don't put `.id(...)` on a view that also owns a `.sheet`**: changing the id dismisses the sheet. Apply layout-refresh ids to the inner content only.
-- **Accessory widget families don't exist on macOS** — wrap such files in `#if !os(macOS)` (TodayGlanceWidget).
-- **Menu bar that outlives the app = separate helper process.** One process cannot keep its own status item after quitting. Pattern: LSUIElement helper app embedded in `Contents/Library/LoginItems`, launched with `NSWorkspace.openApplication`, optionally registered via `SMAppService.loginItem(identifier:)`. Verified: killing the main app leaves `TempoMenuBar` running.
-- **Signing**: the number in an identity name `Apple Development: name (XXXXXXXXXX)` is the *person* ID, not the team. Team = certificate OU: `security find-certificate -c <name> -p | openssl x509 -noout -subject` → your 10-character team ID. With the Apple ID added in Xcode, `-allowProvisioningUpdates` creates App IDs/profiles automatically; with a wrong team it fails with "No Account for Team". Manual signing without a profile fails ("requires a provisioning profile") because of the App Group entitlement.
-- **Widgets only register when signed**: ad-hoc/unsigned Mac builds never show up in the widget gallery (`pluginkit -m -p com.apple.widgetkit-extension | grep tempo` is empty); signed builds do. The iOS simulator registers unsigned widgets.
-- **App icon**: `Branding/make_icon.swift` draws it with Core Graphics. Current = gradient time ring with a "now" dot around a small calendar page. History: v1 (vertical bars + dot) was rejected by the owner — it read as an audio waveform. Design lesson: icon must say "calendar/time" at 60 px, check at 120/60 px before shipping, and show 2–3 directions instead of one guess. iOS/watch art is full-bleed opaque 1024; macOS is an 824 pt rounded square with shadow (`swift make_icon.swift <dir> final`, then copy into the asset catalogs, macOS sizes via `sips`).
-- **Never write into an observable store from a `Binding` handed to a scene** (`MenuBarExtra(isInserted:)`): SwiftUI writes back on its own → App body re-renders → loop → stack overflow at launch (crash report: `AppGraph.sceneList` re-entrancy). Use `@State` and sync with `onChange`.
-- macOS ignores `.dynamicTypeSize` (verified with an NSHostingView fittingSize test: identical size at xSmall/large/xxxLarge). Interface size on Mac is a layout zoom (GeometryReader + scaleEffect) in `InterfaceScale`.
-- **NSCocoaErrorDomain 513 on macOS (custom widgets)**: a sandboxed app launched via LaunchServices (`open`) is denied creating files inside `~/Library/Group Containers/group.com.local.tempo` (even under Library/Application Support), while the same binary exec'd from a shell succeeds — so test sandbox behaviour with `open --stderr`, not by running the executable. Share data with widgets through the group's `UserDefaults` instead (Widgetry `SpecStore(defaults:)`).
-- watchOS `AppIntentRecommendation(description: "\(set.name)")` inside `recommendations()` asserted and crashed the complication extension on every gallery load; only the default recommendation is offered now.
-- **macOS App Group id must be team-prefixed.** The signed Mac build's provisioning profile has no `application-groups` entitlement, so a plain `group.com.local.tempo` is not usable by the sandboxed app launched normally: writes to the group's UserDefaults didn't persist across launches and file creation in the group container failed with 513. Mac targets now use `$(TeamIdentifierPrefix)group.com.local.tempo` (entitlements) and expose it in Info.plist as `TempoAppGroup`; `AppGroup.identifier` reads that (iOS/watch keep `group.com.local.tempo`). Verified: custom-widget saves persisted across two `open`-launched runs. This also affects Calendar Sets / preferences sharing with the Mac widgets, which previously could not have worked. Group data is at `~/Library/Group Containers/<TEAM>.group.com.local.tempo/`.
-- `tempo://widgets` opens Settings on the custom-widgets screen. `open tempo://…` can route to a stale copy (e.g. an Xcode DerivedData build); use `open -a /full/path/Tempo.app tempo://…`.
+**Calendar data**
+- Never write to the user's calendars while testing. Unit tests use plain values only.
+- EventKit is read-only on watchOS; the watch sends quick-add text to the iPhone (WatchConnectivity).
+- EventKit can't create subscribed calendars; we hand a `webcal://` URL to the system Calendar.
+
+**macOS**
+- No `TimelineView` in a `MenuBarExtra` label (infinite redraw, 2 GB RAM). Use a timer-fed model.
+- Don't write to an observable store from a Binding you give a scene (stack overflow at launch).
+- The menu bar lives in a separate helper app (`TempoMenuBar`) so it survives quitting Tempo.
+- `.dynamicTypeSize` does nothing on macOS; "Interface size" is a layout zoom (`InterfaceScale`).
+- **App Group id must be team-prefixed on Mac** (`$(TeamIdentifierPrefix)group.com.local.tempo`, read from Info.plist key `TempoAppGroup`). With the plain id, shared storage silently fails and file writes give NSCocoaErrorDomain 513.
+- Test sandbox behaviour by launching with `open` (the binary run from a shell hides sandbox problems).
+- `open tempo://…` may hit a stale copy (Xcode DerivedData). Use `open -a /full/path/Tempo.app tempo://…`.
+
+**Widgets**
+- Widgets are separate processes with their own permissions. In the simulator grant Calendar per bundle (`simctl privacy`).
+- After reinstalling simulator apps, re-add widgets; reboot the simulator if widgets stay on the placeholder.
+- Accessory families don't exist on macOS. watchOS needs `recommendations()`; keep it to one default entry (per-set entries crashed the extension).
+- App Intents (widget pickers) must be defined in the widget target, not in a package.
+
+**Signing**
+- The number in a signing identity name is a person id. The Team ID is the certificate's OU.
+- Automatic signing needs `-allowProvisioningUpdates` and an Apple ID in Xcode. Manual signing fails (App Group needs a profile).
+
+**Process**
+- Icon work: show several options instead of guessing.
+- UI changes can't be verified on the user's real calendar; render with synthetic data or ask the owner.
