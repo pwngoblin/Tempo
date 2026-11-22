@@ -1,0 +1,11 @@
+Tempo.xcodeproj/
+Config/*-Info.plist
+DerivedData/
+.build/
+.swiftpm/
+xcuserdata/
+.DS_Store
+dist/
+build/
+build-*/
+*.xcarchive

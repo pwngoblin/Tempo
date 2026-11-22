@@ -1,0 +1,241 @@
+name: Tempo
+options:
+  bundleIdPrefix: com.local
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "17.0"
+    watchOS: "10.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Set your own Apple Developer Team ID (certificate OU) to sign; leave empty for unsigned builds:
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+
+packages:
+  CalendarCore:
+    path: Packages/CalendarCore
+
+# Shared source groups
+# Shared/Common      helpers (colors, month grid, time formatting)      -> everything
+# Shared/UI          event row, quick add + preview pill, set picker    -> macOS, iOS, watchOS
+# Shared/UIRich      mini month, event editor, sets editor              -> macOS, iOS
+# Shared/Intents     Calendar Set entity + widget/button intents        -> apps + all widgets
+# Shared/AppIntents  AddEventIntent + Shortcuts                         -> apps only
+# Shared/MenuBar     status-item UI (MenuBarModel/Label/Popover)         -> TempoMenuBar helper only
+# Shared/WatchLink   WatchConnectivity bridge (EventKit is read-only on watchOS) -> iOS + watchOS
+# Shared/Widgets     provider + Next Event widget/complications         -> all widgets
+# Shared/WidgetsHome month+agenda, set switcher, week schedule          -> iOS/macOS widgets only
+
+targets:
+  # ───────────────────────── macOS ─────────────────────────
+  TempoMac:
+    type: application
+    platform: macOS
+    sources: [Apps/macOS, Shared/Common, Shared/UI, Shared/UIRich, Shared/Intents, Shared/AppIntents]
+    dependencies:
+      - package: CalendarCore
+      - target: TempoMacWidgets
+      - target: TempoMenuBar
+        embed: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Library/LoginItems
+    settings:
+      base:
+        PRODUCT_NAME: Tempo
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.tempo
+        ENABLE_HARDENED_RUNTIME: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Config/TempoMac-Info.plist
+      properties:
+        CFBundleDisplayName: Tempo
+        LSApplicationCategoryType: public.app-category.productivity
+        NSCalendarsFullAccessUsageDescription: Tempo shows and edits your events on this Mac. Nothing leaves your device.
+        NSRemindersFullAccessUsageDescription: Tempo shows your reminders next to your events. Nothing leaves your device.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.local.tempo
+            CFBundleURLSchemes: [tempo]
+    entitlements:
+      path: Config/TempoMac.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.personal-information.calendars: true
+        com.apple.security.application-groups: [group.com.local.tempo]
+
+  # Menu-bar helper: separate background process (no Dock icon) that owns the status item, so it survives quitting the main app.
+  TempoMenuBar:
+    type: application
+    platform: macOS
+    sources: [Apps/MenuBarHelper, Shared/Common, Shared/UI, Shared/UIRich, Shared/MenuBar]
+    dependencies:
+      - package: CalendarCore
+    settings:
+      base:
+        PRODUCT_NAME: TempoMenuBar
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.tempo.menubar
+        ENABLE_HARDENED_RUNTIME: YES
+        SKIP_INSTALL: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+    info:
+      path: Config/TempoMenuBar-Info.plist
+      properties:
+        CFBundleDisplayName: Tempo Menu Bar
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.productivity
+        NSCalendarsFullAccessUsageDescription: Tempo's menu bar shows your next event and countdown. Nothing leaves your device.
+        NSRemindersFullAccessUsageDescription: Tempo's menu bar can add reminders you type. Nothing leaves your device.
+    entitlements:
+      path: Config/TempoMenuBar.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.personal-information.calendars: true
+        com.apple.security.application-groups: [group.com.local.tempo]
+
+  TempoMacWidgets:
+    type: app-extension
+    platform: macOS
+    sources: [Widgets/macOS, Shared/Common, Shared/Intents, Shared/Widgets, Shared/WidgetsHome]
+    dependencies:
+      - package: CalendarCore
+    settings:
+      base:
+        PRODUCT_NAME: TempoWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.tempo.widgets
+        ENABLE_HARDENED_RUNTIME: YES
+        SKIP_INSTALL: YES
+    info:
+      path: Config/TempoMacWidgets-Info.plist
+      properties:
+        CFBundleDisplayName: Tempo Widgets
+        NSCalendarsFullAccessUsageDescription: Tempo widgets show your upcoming events.
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Config/TempoMacWidgets.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.personal-information.calendars: true
+        com.apple.security.application-groups: [group.com.local.tempo]
+
+  # ───────────────────────── iOS ─────────────────────────
+  TempoIOS:
+    type: application
+    platform: iOS
+    sources: [Apps/iOS, Shared/Common, Shared/UI, Shared/UIRich, Shared/Intents, Shared/AppIntents, Shared/WatchLink]
+    dependencies:
+      - package: CalendarCore
+      - target: TempoIOSWidgets
+      - target: TempoWatch
+    settings:
+      base:
+        PRODUCT_NAME: Tempo
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.tempo.ios
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Config/TempoIOS-Info.plist
+      properties:
+        CFBundleDisplayName: Tempo
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSCalendarsFullAccessUsageDescription: Tempo shows and edits your events on this device. Nothing leaves your device.
+        NSRemindersFullAccessUsageDescription: Tempo shows your reminders next to your events. Nothing leaves your device.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.local.tempo.ios
+            CFBundleURLSchemes: [tempo]
+    entitlements:
+      path: Config/TempoIOS.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.local.tempo]
+
+  TempoIOSWidgets:
+    type: app-extension
+    platform: iOS
+    sources: [Widgets/iOS, Shared/Common, Shared/Intents, Shared/Widgets, Shared/WidgetsHome]
+    dependencies:
+      - package: CalendarCore
+    settings:
+      base:
+        PRODUCT_NAME: TempoWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.tempo.ios.widgets
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+    info:
+      path: Config/TempoIOSWidgets-Info.plist
+      properties:
+        CFBundleDisplayName: Tempo Widgets
+        NSCalendarsFullAccessUsageDescription: Tempo widgets show your upcoming events.
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Config/TempoIOSWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.local.tempo]
+
+  # ───────────────────────── watchOS ─────────────────────────
+  TempoWatch:
+    type: application
+    platform: watchOS
+    sources: [Apps/watchOS, Shared/Common, Shared/UI, Shared/Intents, Shared/AppIntents, Shared/WatchLink]
+    dependencies:
+      - package: CalendarCore
+      - target: TempoWatchWidgets
+    settings:
+      base:
+        PRODUCT_NAME: Tempo
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.tempo.ios.watchkitapp
+        SDKROOT: watchos
+        SKIP_INSTALL: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Config/TempoWatch-Info.plist
+      properties:
+        CFBundleDisplayName: Tempo
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.local.tempo.ios
+        NSCalendarsFullAccessUsageDescription: Tempo shows today's events on your watch.
+    entitlements:
+      path: Config/TempoWatch.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.local.tempo]
+
+  TempoWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    sources: [Widgets/watchOS, Shared/Common, Shared/Intents, Shared/Widgets]
+    dependencies:
+      - package: CalendarCore
+    settings:
+      base:
+        PRODUCT_NAME: TempoWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.tempo.ios.watchkitapp.widgets
+        SKIP_INSTALL: YES
+    info:
+      path: Config/TempoWatchWidgets-Info.plist
+      properties:
+        CFBundleDisplayName: Tempo Complications
+        NSCalendarsFullAccessUsageDescription: Tempo complications show your next event.
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Config/TempoWatchWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.local.tempo]
+
+schemes:
+  Tempo-macOS:
+    build: { targets: { TempoMac: all } }
+    run: { config: Debug }
+  Tempo-iOS:
+    build: { targets: { TempoIOS: all } }
+    run: { config: Debug }
+  Tempo-watchOS:
+    build: { targets: { TempoWatch: all } }
+    run: { config: Debug }
