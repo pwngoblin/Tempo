@@ -23,6 +23,7 @@ struct TempoMacApp: App {
             RootView()
                 .environment(manager).environment(nav)
                 .tempoAppearance(manager)
+                .tempoInterfaceScale()
                 .onChange(of: PrefsStore.shared.values.menuBarEnabled) { _, on in MenuBarHelper.apply(enabled: on) }
                 .task { MenuBarHelper.ensureRunning(); await manager.requestAccess() }
                 .onOpenURL { nav.handle($0, manager: manager) }
@@ -79,6 +80,11 @@ struct TempoCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("New Event…") { nav.showQuickAdd = true }.keyboardShortcut("n")
             Button("Quick Add") { nav.showQuickAdd = true }.keyboardShortcut("k")
+        }
+        CommandGroup(after: .toolbar) {
+            Button("Zoom In") { PrefsStore.shared.values.interfaceSize = PrefsStore.shared.values.interfaceSize.larger }.keyboardShortcut("=")
+            Button("Zoom Out") { PrefsStore.shared.values.interfaceSize = PrefsStore.shared.values.interfaceSize.smaller }.keyboardShortcut("-")
+            Button("Actual Size") { PrefsStore.shared.values.interfaceSize = .standard }.keyboardShortcut("0")
         }
         CommandMenu("Navigate") {
             Button("Today") { nav.date = .now }.keyboardShortcut("t")

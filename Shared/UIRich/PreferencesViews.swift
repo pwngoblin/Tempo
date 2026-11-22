@@ -43,6 +43,16 @@ struct AccentPicker: View {
 struct LayoutSection: View {
     @Bindable private var store = PrefsStore.shared
     var body: some View {
+        Section {
+            Picker("Interface size", selection: $store.values.interfaceSize) { ForEach(InterfaceSize.allCases) { Text($0.title).tag($0) } }
+                .pickerStyle(.segmented)
+        } header: { Text("Interface size") } footer: {
+            #if os(macOS)
+            Text("Shrinks or enlarges the whole window. Shortcuts: ⌘+ zoom in, ⌘− zoom out, ⌘0 actual size.")
+            #else
+            Text("Scales text and controls across the app. “Default” follows your system text size.")
+            #endif
+        }
         Section("Event style") {
             Picker("Density", selection: $store.values.density) { ForEach(DensityChoice.allCases) { Text($0.title).tag($0) } }
             Picker("Event blocks", selection: $store.values.blockStyle) { ForEach(BlockStyleChoice.allCases) { Text($0.title).tag($0) } }
@@ -214,8 +224,10 @@ struct SettingsView: View {
         TabView {
             Form { AppearanceSection(); NewEventsSection(); ResetSection() }.formStyle(.grouped)
                 .tabItem { Label("General", systemImage: "gearshape") }
-            Form { ViewsSection(); LayoutSection() }.formStyle(.grouped)
+            Form { ViewsSection() }.formStyle(.grouped)
                 .tabItem { Label("Views", systemImage: "rectangle.split.3x1") }
+            Form { LayoutSection() }.formStyle(.grouped)
+                .tabItem { Label("Layout", systemImage: "rectangle.grid.1x2") }
             Form { MenuBarSection() }.formStyle(.grouped)
                 .tabItem { Label("Menu Bar", systemImage: "menubar.rectangle") }
             Form { CalendarVisibilitySection() }.formStyle(.grouped)
@@ -227,14 +239,18 @@ struct SettingsView: View {
         #else
         NavigationStack(path: $path) {
             List {
-                NavigationLink(value: Page.appearance) { Label("Appearance & Time", systemImage: "paintbrush") }
-                NavigationLink(value: Page.layout) { Label("Event Style & Grid", systemImage: "rectangle.grid.1x2") }
-                NavigationLink(value: Page.views) { Label("Agenda & Views", systemImage: "list.bullet.rectangle") }
-                NavigationLink(value: Page.newEvents) { Label("New Events", systemImage: "plus.circle") }
-                NavigationLink(value: Page.calendars) { Label("Visible Calendars", systemImage: "calendar") }
-                NavigationLink(value: Page.sets) { Label("Calendar Sets", systemImage: "square.stack") }
-                NavigationLink(value: Page.subscriptions) { Label("Subscribed Calendars", systemImage: "dot.radiowaves.up.forward") }
-                Form { ResetSection() }.frame(height: 90).listRowInsets(EdgeInsets())
+                Section {
+                    row(.appearance, "Appearance & Time", "paintbrush.fill", .indigo)
+                    row(.layout, "Event Style & Grid", "rectangle.grid.1x2.fill", .orange)
+                    row(.views, "Agenda & Views", "list.bullet.rectangle.fill", .blue)
+                    row(.newEvents, "New Events", "plus.circle.fill", .green)
+                }
+                Section("Calendars") {
+                    row(.calendars, "Visible Calendars", "calendar", .red)
+                    row(.sets, "Calendar Sets", "square.stack.fill", .purple)
+                    row(.subscriptions, "Subscribed Calendars", "dot.radiowaves.up.forward", .teal)
+                }
+                ResetSection()
             }
             .navigationTitle("Settings").navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Page.self) { page in
@@ -257,6 +273,21 @@ struct SettingsView: View {
         .onAppear { if let start, path.isEmpty { path = [start] } }
         #endif
     }
+
+    #if !os(macOS)
+    /// Apple-Settings-style row: coloured rounded icon tile + title.
+    private func row(_ page: Page, _ title: String, _ symbol: String, _ color: Color) -> some View {
+        NavigationLink(value: page) {
+            Label {
+                Text(title)
+            } icon: {
+                Image(systemName: symbol).font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                    .frame(width: 30, height: 30)
+                    .background(color.gradient, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            }
+        }
+    }
+    #endif
 
     private func title(_ p: Page) -> String {
         switch p {

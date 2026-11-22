@@ -64,3 +64,12 @@ Large field with a leading icon and clear button → a **preview card** (calenda
 ## Information density (watch + widgets)
 - **Watch app:** the Now/Next card shows time range, place, meeting provider, a live progress bar for the current event and a "Then …" line. The list header reads "Today · N left · Free/Busy until …", a Tomorrow section follows, and tapping any row opens a detail page (calendar, duration, place, meeting host, repeat, countdown). Rows show place or meeting provider.
 - **Small Next Event widget:** now honours the existing toggles — Locations, Calendar names, Meeting icon, Following event — and adds a progress bar for the current event plus duration. Turn them on/off per widget in Edit Widget.
+
+## Add (Apple-Calendar style)
+The Mac command bar (⌘N/⌘K) and the iOS Add sheet open `AddEventView`, modelled on Apple Calendar's New Event sheet: a grouped form (title, location, all-day, start/end, calendar) with Cancel / Add. Its first row is a **quick-entry field** ("Type it: Gym tomorrow 6pm") that fills the fields as you type; everything stays editable. There is no mode switch. The watch and the menu-bar popover keep the compact `QuickAddView`. An **Event | Reminder** segment under the quick-entry field switches the form to a single Due date for reminders.
+
+## Interface size (make it smaller)
+Settings → Layout → **Interface size**: Extra compact / Compact / Default / Large.
+- **macOS** has no Dynamic Type, so the main window is zoomed as a whole (0.8× / 0.9× / 1× / 1.15×) — more of the calendar fits when smaller. Shortcuts: **⌘+** zoom in, **⌘−** zoom out, **⌘0** actual size (View menu). Settings and system popovers keep their normal size.
+- **iOS** maps the step to Dynamic Type (xSmall / small / system / xLarge) plus control size; *Default* follows the system text size.
+- Independent from **Density** (row padding), **Hour height** and the per-widget Density option, so they can be combined.

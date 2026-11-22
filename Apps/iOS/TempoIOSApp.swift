@@ -12,6 +12,7 @@ struct TempoIOSApp: App {
             RootView()
                 .environment(manager).environment(nav)
                 .tempoAppearance(manager)
+                .tempoInterfaceScale()
                 .task {
                     await manager.requestAccess()
                     WatchLink.shared.onAddRequest = { text, at in

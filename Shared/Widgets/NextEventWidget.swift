@@ -94,7 +94,11 @@ struct NextEventView: View {
                 Text(entry.current != nil ? "NOW" : "NEXT").font(.system(size: 9, weight: .semibold)).foregroundStyle(.secondary)
                 Text(focus.title).font(.headline).lineLimit(1).widgetAccentable()
                 Text(o.window(focus)).font(.caption.monospacedDigit()).lineLimit(1)
-                if !reduced, o.showFollowing, let f = entry.following {
+                if !reduced, o.showLocation, let place = focus.location, !place.isEmpty {
+                    Label(place, systemImage: "mappin").labelStyle(.titleAndIcon).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                } else if !reduced, o.showMeetingIcon, let link = focus.meetingLink {
+                    Label(link.provider.name, systemImage: link.provider.symbol).labelStyle(.titleAndIcon).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                } else if !reduced, o.showFollowing, let f = entry.following {
                     Text("Then \(f.title) · \(o.time(f.start))").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                 }
             } else {

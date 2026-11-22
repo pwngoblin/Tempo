@@ -57,3 +57,8 @@ trigger `reloadAllTimelines()`.
 ## Data access caveat
 Widgets read EventKit directly in the extension. This needs the app's Calendar grant and, on macOS, the calendars sandbox
 entitlement in the extension (declared). Verify on a signed build.
+
+- **Complications (rectangular):** Next Event shows place (or meeting provider, or the following event) under the time; Today at a Glance adds "Busy/Free until …".
+
+## Future: user-built widgets (Widgetry)
+Today every widget is a fixed layout with options (`TempoWidgetIntent`). Letting users design the layout itself is being built as the standalone package **Widgetry** (https://github.com/pwngoblin/Widgetry): widgets are declarative JSON specs rendered by one generic extension. Planned Tempo side: a `WidgetDataSource` exposing `event.*` / `upcoming` / `free.*`, a "Custom" widget kind with a spec picker, and an editor in Settings. Not started in this repo.

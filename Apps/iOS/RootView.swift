@@ -44,16 +44,8 @@ struct RootView: View {
         }
         .tempoHaptic(.impact(flexibility: .soft), trigger: haptic)
         .sheet(isPresented: $nav.showQuickAdd) {
-            NavigationStack {
-                VStack(alignment: .leading) {
-                    QuickAddView(allowReminders: true) { nav.showQuickAdd = false }
-                    Spacer()
-                }
-                .padding()
-                .navigationTitle("Quick Add").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { nav.showQuickAdd = false } } }
-            }
-            .presentationDetents([.medium, .large]).environment(manager)
+            AddEventView { nav.showQuickAdd = false }
+                .presentationDetents([.large]).environment(manager)
         }
         .sheet(item: $nav.editor) { EventEditorView(target: $0).environment(manager) }
         .sheet(item: $nav.detail) { e in EventDetailView(event: e).environment(manager).presentationDetents([.medium, .large]) }

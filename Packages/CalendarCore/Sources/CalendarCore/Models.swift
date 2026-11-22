@@ -45,15 +45,19 @@ public struct EventItem: Identifiable, Hashable, Sendable, Codable {
     public var meetingLink: MeetingLink?
     public var hasRecurrence: Bool
     public var canModify: Bool
+    /// First ~500 characters of the event's notes (read-only; widgets never show it).
+    public var notes: String?
+    /// Number of invited people (nil when the event has no attendees).
+    public var attendeeCount: Int?
 
     public init(id: String? = nil, eventID: String, title: String, start: Date, end: Date, isAllDay: Bool = false,
                 location: String? = nil, calendarID: String = "", calendarTitle: String = "", color: RGBA = .fallback,
-                meetingLink: MeetingLink? = nil, hasRecurrence: Bool = false, canModify: Bool = true) {
+                meetingLink: MeetingLink? = nil, hasRecurrence: Bool = false, canModify: Bool = true, notes: String? = nil, attendeeCount: Int? = nil) {
         self.id = id ?? "\(eventID)|\(Int(start.timeIntervalSince1970))"
         self.eventID = eventID; self.title = title; self.start = start; self.end = end
         self.isAllDay = isAllDay; self.location = location; self.calendarID = calendarID
         self.calendarTitle = calendarTitle; self.color = color; self.meetingLink = meetingLink
-        self.hasRecurrence = hasRecurrence; self.canModify = canModify
+        self.hasRecurrence = hasRecurrence; self.canModify = canModify; self.notes = notes; self.attendeeCount = attendeeCount
     }
 
     public var interval: DateInterval { DateInterval(start: start, end: max(end, start)) }

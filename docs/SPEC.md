@@ -52,16 +52,17 @@ Original brief (condensed) and where each requirement lives. ✅ built + compile
 | Custom app icon v2: time ring + calendar page (no SF Symbol; v1 waveform bars rejected) | ✅ | `Branding/make_icon.swift` (`swift make_icon.swift . final`) |
 | **Menu bar survives quitting the app**: separate `TempoMenuBar` helper (LSUIElement) embedded as a login item; main app launches it, ⌘Q leaves it running | ✅ | `Apps/MenuBarHelper`, `Shared/MenuBar`, `Apps/macOS/MenuBarHelper.swift` |
 | Signed builds (set `DEVELOPMENT_TEAM` in `project.yml`, App Group + sandbox, profiles via Xcode account) | ✅ | `project.yml`; widgets register with macOS only when signed |
-| App icon: "Midnight grid, ring on today" (light/dark/tinted on iOS, dark on watch, macOS options pending) | ✅ ⚠️ | `Branding/make_icon.swift`, `Branding/mac_options.swift` |
+| App icon: "Midnight grid, ring on today" (light/dark/tinted on iOS, dark on watch); macOS uses the calendar-page icon (white page, coral header, three colour bars) | ✅ ⚠️ | `Branding/make_icon.swift`, `Branding/mac_options.swift` |
 | Release builds of all three apps | ✅ | `dist/` (git-ignored) |
-| macOS window launch hang fixed (menu-bar label loop) | ✅ | `Apps/macOS/MenuBar.swift` (`MenuBarModel`) |
+| macOS window launch hang fixed (menu-bar label loop) | ✅ | `Shared/MenuBar/MenuBarUI.swift` (`MenuBarModel`) |
 
 ## 6. Plan items
 Layout/targets/Info.plist keys/entitlements → `project.yml`, `ARCHITECTURE.md`. Parser unit tests → `CalendarCoreTests`.
 
 ## Not done / follow-ups
+- Fully user-built widgets → separate package **Widgetry** (github.com/pwngoblin/Widgetry); Tempo integration not started.
 - Signed on-device run (permissions, widget data access, WatchConnectivity delivery, complications on a face).
 - iCloud key-value mirroring of Calendar Sets needs the capability + a team.
 - Reminders aren't shown in widgets (would need a Reminders grant inside the extension).
-- Notes aren't carried in `EventItem`; the detail card omits them.
+- Notes (first 500 chars) and attendee count are carried in `EventItem` and shown on the detail cards (iOS/macOS) and the watch detail page; widgets never show notes.
 - Localization: strings are English; formats are locale-aware.

@@ -12,7 +12,9 @@ public extension EventItem {
             calendarID: e.calendar?.calendarIdentifier ?? "", calendarTitle: e.calendar?.title ?? "",
             color: RGBA(cgColor: e.calendar?.cgColor),
             meetingLink: MeetingLinkExtractor.extract(url: e.url, location: e.location, notes: e.notes),
-            hasRecurrence: e.hasRecurrenceRules, canModify: e.calendar?.allowsContentModifications ?? false)
+            hasRecurrence: e.hasRecurrenceRules, canModify: e.calendar?.allowsContentModifications ?? false,
+            notes: e.notes.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : String($0.trimmingCharacters(in: .whitespacesAndNewlines).prefix(500)) },
+            attendeeCount: e.attendees.flatMap { $0.isEmpty ? nil : $0.count })
     }
 }
 

@@ -28,5 +28,8 @@ Local-first calendar for macOS/iOS/watchOS (EventKit + WidgetKit). No network, n
 - New user-facing option = add to `AppPrefs` (tolerant decode), a control in `PreferencesViews.swift`, use it, and add a row to docs/UX.md.
 - Treat meeting links/deep links as untrusted input (see ARCHITECTURE → Security).
 
+## Related repos
+- Widgetry (~/Stuff/Widgetry, github.com/pwngoblin/Widgetry): user-built widget spec/renderer package; Tempo will be its first host. Keep Tempo's integration thin and put generic logic in Widgetry.
+
 ## Docs map
 README.md · docs/SPEC.md (requirements ↔ code) · docs/ARCHITECTURE.md · docs/PARSER.md · docs/WIDGETS.md · docs/UX.md · docs/TESTING.md · KNOWLEDGEBASE.md

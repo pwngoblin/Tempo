@@ -108,8 +108,7 @@ struct CommandBar: View {
     var body: some View {
         ZStack(alignment: .top) {
             Color.black.opacity(0.15).ignoresSafeArea().onTapGesture { nav.showQuickAdd = false }
-            QuickAddView { nav.showQuickAdd = false }
-                .padding(14)
+            AddEventView { nav.showQuickAdd = false }
                 .frame(width: 520)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.separator))

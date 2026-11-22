@@ -65,5 +65,11 @@ Built for all three platforms and unit-tested, but not launched on hardware: per
 (widgets rely on the app's Calendar grant; on macOS the extension has the calendars entitlement), complications on a real watch,
 and watch ⇄ phone delivery need a signed run. Add an iPhone/Watch simulator pair or device to test WatchConnectivity.
 
+## Related project: Widgetry
+Fully user-built widgets (the next step after the per-widget options above) are being developed as a separate, reusable
+Swift package: **Widgetry**, https://github.com/pwngoblin/Widgetry (currently private; early 0.1 with the spec model,
+template engine, validator and renderer). Tempo is its reference host app; the integration (spec store, widget picker,
+editor UI and a calendar `WidgetDataSource`) will land here once Widgetry has its store and WidgetKit glue.
+
 ## License
 MIT, see [LICENSE](LICENSE).

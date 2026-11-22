@@ -51,6 +51,18 @@ enum DensityChoice: String, Codable, CaseIterable, Identifiable {
     var rowPadding: CGFloat { self == .compact ? 0 : self == .comfortable ? 3 : 8 }
 }
 
+/// Whole-interface size. macOS has no Dynamic Type, so the main window is zoomed (⌘+ / ⌘− / ⌘0);
+/// iOS maps the step onto Dynamic Type. `.standard` leaves the system setting untouched.
+enum InterfaceSize: String, Codable, CaseIterable, Identifiable {
+    case compact, small, standard, large
+    var id: String { rawValue }
+    var title: String { switch self { case .compact: "Extra compact"; case .small: "Compact"; case .standard: "Default"; case .large: "Large" } }
+    var zoom: CGFloat { switch self { case .compact: 0.8; case .small: 0.9; case .standard: 1.0; case .large: 1.15 } }
+    var dynamicType: DynamicTypeSize? { switch self { case .compact: .xSmall; case .small: .small; case .standard: nil; case .large: .xLarge } }
+    var smaller: InterfaceSize { let a = Self.allCases; return a[max(a.firstIndex(of: self)! - 1, 0)] }
+    var larger: InterfaceSize { let a = Self.allCases; return a[min(a.firstIndex(of: self)! + 1, a.count - 1)] }
+}
+
 enum MenuBarFormatChoice: String, Codable, CaseIterable, Identifiable {
     case compact, long
     var id: String { rawValue }
@@ -69,6 +81,7 @@ struct AppPrefs: Codable, Equatable {
     var weekStart: WeekStartChoice = .system
     var showWeekNumbers = false
     // Layout
+    var interfaceSize: InterfaceSize = .standard
     var density: DensityChoice = .comfortable
     var blockStyle: BlockStyleChoice = .tinted
     var hourHeightScale = 1.0              // 0.7 … 1.8
@@ -100,6 +113,7 @@ struct AppPrefs: Codable, Equatable {
         func v<T: Decodable>(_ k: CodingKeys, _ d: T) -> T { (try? c.decodeIfPresent(T.self, forKey: k)) ?? d }
         theme = v(.theme, theme); accent = v(.accent, accent); timeFormat = v(.timeFormat, timeFormat)
         weekStart = v(.weekStart, weekStart); showWeekNumbers = v(.showWeekNumbers, showWeekNumbers)
+        interfaceSize = v(.interfaceSize, interfaceSize)
         density = v(.density, density); blockStyle = v(.blockStyle, blockStyle)
         hourHeightScale = min(max(v(.hourHeightScale, hourHeightScale), 0.7), 1.8)
         scrollToHour = min(max(v(.scrollToHour, scrollToHour), 0), 22)

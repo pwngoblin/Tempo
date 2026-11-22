@@ -97,6 +97,8 @@ struct WatchEventDetail: View {
                 if let l = event.location, !l.isEmpty { row("mappin.and.ellipse", l) }
                 if let m = event.meetingLink { row(m.provider.symbol, m.provider.name, sub: m.url.host) }
                 if event.hasRecurrence { row("repeat", "Repeats") }
+                if let n = event.attendeeCount { row("person.2", n == 1 ? "1 person" : "\(n) people") }
+                if let notes = event.notes { Text(notes).font(.caption2).foregroundStyle(.secondary).lineLimit(8) }
                 if !event.isAllDay, event.end > .now {
                     let isNow = event.start <= .now
                     (Text(isNow ? "Ends in " : "Starts in ") + Text(isNow ? event.end : event.start, style: .timer).monospacedDigit())

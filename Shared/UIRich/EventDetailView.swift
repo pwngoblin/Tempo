@@ -44,6 +44,11 @@ struct EventDetailView: View {
                 Label(event.calendarTitle, systemImage: "circle.fill").foregroundStyle(Color(event.color))
                     .labelStyle(.titleAndIcon).imageScale(.small)
                 if event.hasRecurrence { Label("Repeating", systemImage: "repeat").foregroundStyle(.secondary) }
+                if let n = event.attendeeCount { Label(n == 1 ? "1 person invited" : "\(n) people invited", systemImage: "person.2").foregroundStyle(.secondary) }
+                if let notes = event.notes {
+                    Divider()
+                    Text(notes).font(.callout).foregroundStyle(.secondary).textSelection(.enabled)
+                }
                 #if os(macOS)
                 if event.canModify, let onEdit { Button("Edit…") { onEdit() }.padding(.top, 4) }
                 #endif

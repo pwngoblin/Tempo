@@ -50,7 +50,11 @@ struct TodayGlanceView: View {
                 Text(total == 0 ? "Nothing today" : "\(remaining.count) of \(total) left").font(.headline).widgetAccentable()
                 if let n = next {
                     Text(n.title).font(.caption).lineLimit(1)
-                    if !reduced { Text(o.window(n)).font(.caption2.monospacedDigit()).foregroundStyle(.secondary) }
+                    if !reduced {
+                        Text(o.window(n)).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                        if let busy = Agenda.busyUntil(entry.events, at: entry.date) { Text("Busy until \(o.time(busy))").font(.caption2).foregroundStyle(.secondary) }
+                        else if let free = Agenda.freeUntil(entry.events, at: entry.date) { Text("Free until \(o.time(free))").font(.caption2).foregroundStyle(.secondary) }
+                    }
                 } else { Text("You're done for today").font(.caption).foregroundStyle(.secondary) }
             }.frame(maxWidth: .infinity, alignment: .leading)
         case .accessoryInline:
