@@ -11,6 +11,7 @@ struct TempoWidgetBundle: WidgetBundle {
         DayTimelineWidget()
         WeekScheduleWidget()
         SetSwitcherWidget()
+        CustomWidget()
         TodayGlanceWidget()
     }
 }

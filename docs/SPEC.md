@@ -60,7 +60,7 @@ Original brief (condensed) and where each requirement lives. ✅ built + compile
 Layout/targets/Info.plist keys/entitlements → `project.yml`, `ARCHITECTURE.md`. Parser unit tests → `CalendarCoreTests`.
 
 ## Not done / follow-ups
-- Fully user-built widgets → separate package **Widgetry** (github.com/pwngoblin/Widgetry); Tempo integration not started.
+- Custom (user-designed) widgets: integrated via the Widgetry package (iOS + macOS). Not yet: watchOS, drag-to-reorder in the editor, per-widget Calendar Set choice (uses the active set), real-device verification.
 - Signed on-device run (permissions, widget data access, WatchConnectivity delivery, complications on a face).
 - iCloud key-value mirroring of Calendar Sets needs the capability + a team.
 - Reminders aren't shown in widgets (would need a Reminders grant inside the extension).

@@ -60,5 +60,10 @@ entitlement in the extension (declared). Verify on a signed build.
 
 - **Complications (rectangular):** Next Event shows place (or meeting provider, or the following event) under the time; Today at a Glance adds "Busy/Free until …".
 
-## Future: user-built widgets (Widgetry)
-Today every widget is a fixed layout with options (`TempoWidgetIntent`). Letting users design the layout itself is being built as the standalone package **Widgetry** (https://github.com/pwngoblin/Widgetry): widgets are declarative JSON specs rendered by one generic extension. Planned Tempo side: a `WidgetDataSource` exposing `event.*` / `upcoming` / `free.*`, a "Custom" widget kind with a spec picker, and an editor in Settings. Not started in this repo.
+## Custom widgets (Widgetry)
+Besides the fixed widgets above, users can **design their own**: Settings → **Widgets** (Mac tab / iPhone "Custom Widgets") → New Widget → pick a template → edit in the visual editor (live preview, outline, inspector). Then add the **Custom** widget from the gallery (small / medium / large, iPhone + Mac) and choose which design it shows. Engine and editor come from the sibling package **Widgetry** (https://github.com/pwngoblin/Widgetry; `project.yml` references it at `../Widgetry`, so clone it next to this repo).
+
+- Specs are stored in the App Group (`widgetry-specs.json`) via `TempoSpecStore`; saving reloads widget timelines.
+- `TempoCustomData` (`Shared/Custom`) is the calendar data source. It only reads events already loaded through `EventReader` for the active Calendar Set (next 7 days).
+- Fields: text `title subtitle location calendar meeting when status heading`, dates `start end countdown freeUntil busyUntil`, numbers `progress minutes leftToday todayCount`, flags `isActive hasEvent hasLocation hasMeeting isFree`, lists `items today` (rows: `item.title start end when day location calendar`).
+- The entity picker/intent/provider live in `Shared/CustomWidget` (App Intents must be in the extension target). Not on watchOS yet.

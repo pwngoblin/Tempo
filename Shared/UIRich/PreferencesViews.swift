@@ -214,7 +214,7 @@ struct ResetSection: View {
 // MARK: - Settings container
 
 struct SettingsView: View {
-    enum Page: Hashable { case appearance, layout, views, newEvents, calendars, sets, subscriptions }
+    enum Page: Hashable { case appearance, layout, views, newEvents, calendars, sets, subscriptions, customWidgets }
     var start: Page?
     @State private var path: [Page] = []
     @Environment(\.dismiss) private var dismiss
@@ -233,6 +233,7 @@ struct SettingsView: View {
             Form { CalendarVisibilitySection() }.formStyle(.grouped)
                 .tabItem { Label("Calendars", systemImage: "calendar") }
             SetsEditorView().tabItem { Label("Sets", systemImage: "square.stack") }
+            CustomWidgetsView().tabItem { Label("Widgets", systemImage: "square.grid.2x2") }
             SubscriptionsView().tabItem { Label("Subscriptions", systemImage: "dot.radiowaves.up.forward") }
         }
         .frame(width: 600, height: 560)
@@ -250,6 +251,9 @@ struct SettingsView: View {
                     row(.sets, "Calendar Sets", "square.stack.fill", .purple)
                     row(.subscriptions, "Subscribed Calendars", "dot.radiowaves.up.forward", .teal)
                 }
+                Section("Widgets") {
+                    row(.customWidgets, "Custom Widgets", "square.grid.2x2.fill", .pink)
+                }
                 ResetSection()
             }
             .navigationTitle("Settings").navigationBarTitleDisplayMode(.inline)
@@ -263,6 +267,7 @@ struct SettingsView: View {
                     case .calendars: Form { CalendarVisibilitySection() }
                     case .sets: SetsEditorView()
                     case .subscriptions: SubscriptionsView()
+                    case .customWidgets: CustomWidgetsView()
                     }
                 }
                 .navigationBarTitleDisplayMode(.inline)
@@ -292,7 +297,7 @@ struct SettingsView: View {
     private func title(_ p: Page) -> String {
         switch p {
         case .appearance: "Appearance & Time"; case .layout: "Event Style & Grid"; case .views: "Agenda & Views"
-        case .newEvents: "New Events"; case .calendars: "Visible Calendars"; case .sets: "Calendar Sets"; case .subscriptions: "Subscriptions"
+        case .newEvents: "New Events"; case .calendars: "Visible Calendars"; case .sets: "Calendar Sets"; case .subscriptions: "Subscriptions"; case .customWidgets: "Custom Widgets"
         }
     }
 }

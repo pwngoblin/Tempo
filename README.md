@@ -6,7 +6,7 @@ Local-first calendar for macOS, iOS and watchOS on top of `EKEventStore`. No acc
 Bundle IDs: `com.local.tempo*` · App Group: `group.com.local.tempo` · URL scheme: `tempo://`
 
 ## Requirements
-macOS with Xcode 16+ (Swift 5 language mode), [XcodeGen](https://github.com/yonaskolb/XcodeGen). Widgets and the menu-bar helper need a signed build (your own Apple Developer team, see below). The iOS/watchOS targets build for the simulator without signing.
+The [Widgetry](https://github.com/pwngoblin/Widgetry) package checked out as a sibling folder (`../Widgetry`). macOS with Xcode 16+ (Swift 5 language mode), [XcodeGen](https://github.com/yonaskolb/XcodeGen). Widgets and the menu-bar helper need a signed build (your own Apple Developer team, see below). The iOS/watchOS targets build for the simulator without signing.
 
 ## Build
 ```sh
@@ -65,11 +65,10 @@ Built for all three platforms and unit-tested, but not launched on hardware: per
 (widgets rely on the app's Calendar grant; on macOS the extension has the calendars entitlement), complications on a real watch,
 and watch ⇄ phone delivery need a signed run. Add an iPhone/Watch simulator pair or device to test WatchConnectivity.
 
-## Related project: Widgetry
-Fully user-built widgets (the next step after the per-widget options above) are being developed as a separate, reusable
-Swift package: **Widgetry**, https://github.com/pwngoblin/Widgetry (currently private; early 0.1 with the spec model,
-template engine, validator and renderer). Tempo is its reference host app; the integration (spec store, widget picker,
-editor UI and a calendar `WidgetDataSource`) will land here once Widgetry has its store and WidgetKit glue.
+## Custom widgets: Widgetry
+Users can design their own widgets (Settings → Widgets) with a visual editor. The engine and editor are the separate Swift
+package **Widgetry**, https://github.com/pwngoblin/Widgetry (currently private). `project.yml` references it as a local
+package at `../Widgetry`, so **clone Widgetry next to this repo to build**. See docs/WIDGETS.md.
 
 ## License
 MIT, see [LICENSE](LICENSE).

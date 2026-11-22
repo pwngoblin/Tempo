@@ -32,6 +32,11 @@ struct TempoMacApp: App {
         }
         .commands { TempoCommands(nav: nav, manager: manager) }
 
+        WindowGroup("Widget Editor", id: "widget-editor", for: UUID.self) { $id in
+            if let id { WidgetEditorWindow(id: id).environment(manager).tempoAppearance(manager) }
+        }
+        .defaultSize(width: 980, height: 700)
+
         Settings { SettingsView().environment(manager).tempoAppearance(manager) }
     }
 }

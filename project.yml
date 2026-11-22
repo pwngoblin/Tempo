@@ -20,6 +20,9 @@ settings:
 packages:
   CalendarCore:
     path: Packages/CalendarCore
+  # Custom widgets engine + editor (sibling repo: clone github.com/pwngoblin/Widgetry next to this repo)
+  Widgetry:
+    path: ../Widgetry
 
 # Shared source groups
 # Shared/Common      helpers (colors, month grid, time formatting)      -> everything
@@ -31,15 +34,19 @@ packages:
 # Shared/WatchLink   WatchConnectivity bridge (EventKit is read-only on watchOS) -> iOS + watchOS
 # Shared/Widgets     provider + Next Event widget/complications         -> all widgets
 # Shared/WidgetsHome month+agenda, set switcher, week schedule          -> iOS/macOS widgets only
+# Shared/Custom      Widgetry data source + spec store                    -> iOS/macOS apps + widgets
+# Shared/CustomUI    Settings → Widgets list + editor host                 -> iOS/macOS apps
+# Shared/CustomWidget user-designed 'Custom' widget (entity, intent, provider) -> iOS/macOS widgets
 
 targets:
   # ───────────────────────── macOS ─────────────────────────
   TempoMac:
     type: application
     platform: macOS
-    sources: [Apps/macOS, Shared/Common, Shared/UI, Shared/UIRich, Shared/Intents, Shared/AppIntents]
+    sources: [Apps/macOS, Shared/Common, Shared/UI, Shared/UIRich, Shared/Intents, Shared/AppIntents, Shared/Custom, Shared/CustomUI]
     dependencies:
       - package: CalendarCore
+      - package: Widgetry
       - target: TempoMacWidgets
       - target: TempoMenuBar
         embed: true
@@ -73,9 +80,10 @@ targets:
   TempoMenuBar:
     type: application
     platform: macOS
-    sources: [Apps/MenuBarHelper, Shared/Common, Shared/UI, Shared/UIRich, Shared/MenuBar]
+    sources: [Apps/MenuBarHelper, Shared/Common, Shared/UI, Shared/UIRich, Shared/MenuBar, Shared/Custom, Shared/CustomUI]
     dependencies:
       - package: CalendarCore
+      - package: Widgetry   # UIRich's SettingsView references the custom-widgets screen
     settings:
       base:
         PRODUCT_NAME: TempoMenuBar
@@ -101,9 +109,10 @@ targets:
   TempoMacWidgets:
     type: app-extension
     platform: macOS
-    sources: [Widgets/macOS, Shared/Common, Shared/Intents, Shared/Widgets, Shared/WidgetsHome]
+    sources: [Widgets/macOS, Shared/Common, Shared/Intents, Shared/Widgets, Shared/WidgetsHome, Shared/Custom, Shared/CustomWidget]
     dependencies:
       - package: CalendarCore
+      - package: Widgetry
     settings:
       base:
         PRODUCT_NAME: TempoWidgets
@@ -128,9 +137,10 @@ targets:
   TempoIOS:
     type: application
     platform: iOS
-    sources: [Apps/iOS, Shared/Common, Shared/UI, Shared/UIRich, Shared/Intents, Shared/AppIntents, Shared/WatchLink]
+    sources: [Apps/iOS, Shared/Common, Shared/UI, Shared/UIRich, Shared/Intents, Shared/AppIntents, Shared/WatchLink, Shared/Custom, Shared/CustomUI]
     dependencies:
       - package: CalendarCore
+      - package: Widgetry
       - target: TempoIOSWidgets
       - target: TempoWatch
     settings:
@@ -158,9 +168,10 @@ targets:
   TempoIOSWidgets:
     type: app-extension
     platform: iOS
-    sources: [Widgets/iOS, Shared/Common, Shared/Intents, Shared/Widgets, Shared/WidgetsHome]
+    sources: [Widgets/iOS, Shared/Common, Shared/Intents, Shared/Widgets, Shared/WidgetsHome, Shared/Custom, Shared/CustomWidget]
     dependencies:
       - package: CalendarCore
+      - package: Widgetry
     settings:
       base:
         PRODUCT_NAME: TempoWidgets

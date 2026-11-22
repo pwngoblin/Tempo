@@ -44,14 +44,11 @@ struct TempoProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> TempoEntry { .sample() }
 
     #if os(watchOS)
-    /// Complications are edited on the watch face; these are the ready-made choices in the gallery.
+    /// Complications are configured on the watch face (the set is a parameter); the gallery offers one ready-made choice.
+    /// (Per-set recommendations were removed: building `AppIntentRecommendation(description: "\(set.name)")` hit a
+    /// WidgetKit assertion in `recommendations()`, which crashed the extension every time the gallery loaded.)
     func recommendations() -> [AppIntentRecommendation<TempoWidgetIntent>] {
-        var out = [AppIntentRecommendation(intent: TempoWidgetIntent(), description: "Active Calendar Set")]
-        for s in CalendarSetStore().customSets.prefix(4) {
-            var i = TempoWidgetIntent(); i.set = CalendarSetEntity(s)
-            out.append(AppIntentRecommendation(intent: i, description: "\(s.name)"))
-        }
-        return out
+        [AppIntentRecommendation(intent: TempoWidgetIntent(), description: "Active Calendar Set")]
     }
     #endif
 

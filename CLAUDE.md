@@ -29,7 +29,7 @@ Local-first calendar for macOS/iOS/watchOS (EventKit + WidgetKit). No network, n
 - Treat meeting links/deep links as untrusted input (see ARCHITECTURE → Security).
 
 ## Related repos
-- Widgetry (~/Stuff/Widgetry, github.com/pwngoblin/Widgetry): user-built widget spec/renderer package; Tempo will be its first host. Keep Tempo's integration thin and put generic logic in Widgetry.
+- Widgetry (~/Stuff/Widgetry, github.com/pwngoblin/Widgetry): user-built widget spec/renderer package; Tempo is its first host (`project.yml` → `../Widgetry`, local path). Tempo-specific glue: `Shared/Custom` (data source), `Shared/CustomWidget`, `Shared/CustomUI`. Keep it thin; generic logic goes in Widgetry. Widgetry can't touch calendar data: the data source only reads already-loaded `EventItem`s.
 
 ## Docs map
 README.md · docs/SPEC.md (requirements ↔ code) · docs/ARCHITECTURE.md · docs/PARSER.md · docs/WIDGETS.md · docs/UX.md · docs/TESTING.md · KNOWLEDGEBASE.md
