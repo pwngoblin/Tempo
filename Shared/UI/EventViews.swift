@@ -25,6 +25,12 @@ struct EventRow: View {
                 Text(event.title).font(.body.weight(.medium)).lineLimit(2)
                 #if os(watchOS)
                 Text(event.timeRangeText).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
+                if let place = event.location, !place.isEmpty, event.meetingLink == nil {
+                    Label(place, systemImage: "mappin").labelStyle(.titleAndIcon).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                }
+                if let link = event.meetingLink {
+                    Label(link.provider.name, systemImage: link.provider.symbol).labelStyle(.titleAndIcon).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                }
                 #else
                 if p.showLocation, let place = event.location {
                     HStack(spacing: 3) { Image(systemName: "mappin.and.ellipse").imageScale(.small); Text(place).lineLimit(1) }

@@ -18,30 +18,68 @@ struct QuickAddView: View {
         EventParser(calendar: .tempo, defaultDuration: Double(PrefsStore.shared.values.defaultDurationMinutes) * 60).parse(text)
     }
 
+    private var calendarInfo: CalendarInfo? {
+        guard let parsed, !asReminder else { return nil }
+        return manager.resolveCalendar(hint: parsed.calendarHint).map(CalendarInfo.init)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            TextField(asReminder ? "Call mum tomorrow 5pm" : "Gym tomorrow 18:00-19:30 #Personal", text: $text)
+        VStack(alignment: .leading, spacing: 12) {
+            #if os(watchOS)
+            TextField(asReminder ? "Call mum tomorrow 5pm" : "Gym tomorrow 6pm", text: $text)
                 .focused($focused)
                 .onSubmit(commit)
-                #if !os(watchOS)
-                .textFieldStyle(.plain)
-                .font(.title3)
-                #endif
-            #if !os(watchOS)
+            if let parsed {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(parsed.title).font(.headline).lineLimit(2)
+                    Text(parsed.summary).font(.footnote).foregroundStyle(.secondary)
+                }
+                Button(action: commit) { Label("Send to iPhone", systemImage: "arrow.up.circle.fill").frame(maxWidth: .infinity) }
+                    .buttonStyle(.borderedProminent)
+            }
+            #else
+            HStack(spacing: 10) {
+                Image(systemName: asReminder ? "checklist" : "calendar.badge.plus")
+                    .font(.title2).foregroundStyle(.tint).symbolRenderingMode(.hierarchical)
+                TextField(asReminder ? "Call mum tomorrow 5pm" : "Gym tomorrow 6pm", text: $text)
+                    .focused($focused)
+                    .onSubmit(commit)
+                    .textFieldStyle(.plain)
+                    .font(.title2)
+                if !text.isEmpty {
+                    Button { text = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }
+                        .buttonStyle(.plain).accessibilityLabel("Clear")
+                }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
             if allowReminders {
                 Picker("Type", selection: $asReminder) { Text("Event").tag(false); Text("Reminder").tag(true) }
                     .pickerStyle(.segmented).labelsHidden()
             }
-            #endif
-            #if !os(watchOS)
-            if parsed == nil {
-                Text("Try “Lunch tomorrow 12:30-13:30 #Work”, “Sync Fri 10am 45m @Zoom”, or “Gym 6pm”.")
-                    .font(.footnote).foregroundStyle(.secondary)
+
+            if let parsed {
+                PreviewCard(parsed: parsed, calendar: calendarInfo, isReminder: asReminder)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                HStack {
+                    Text("Return to add").font(.footnote).foregroundStyle(.secondary)
+                    Spacer()
+                    Button(action: commit) { Label(asReminder ? "Add reminder" : "Add event", systemImage: "plus") }
+                        .buttonStyle(.borderedProminent).controlSize(.large)
+                        .keyboardShortcut(.defaultAction)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(text.isEmpty ? "Type it the way you'd say it" : "Add a time or day, e.g. “6pm” or “tomorrow”")
+                        .font(.footnote).foregroundStyle(.secondary)
+                    FlowChips(items: ["Lunch tomorrow 12:30-13:30 #Work", "Sync Fri 10am 45m @Zoom", "Gym 6pm"]) { text = $0 }
+                }
             }
             #endif
-            if let parsed { PreviewPill(parsed: parsed, calendar: asReminder ? nil : manager.resolveCalendar(hint: parsed.calendarHint).map(CalendarInfo.init)) }
             if let error { Text(error).font(.caption).foregroundStyle(.red) }
         }
+        .animation(.snappy(duration: 0.2), value: parsed?.title)
         .task { if autofocus { focused = true } }
         .tempoHaptic(.success, trigger: saved)
     }
@@ -63,25 +101,55 @@ struct QuickAddView: View {
     }
 }
 
-struct PreviewPill: View {
+#if !os(watchOS)
+/// Big, readable summary of what will be created: title, when, where, and which calendar.
+struct PreviewCard: View {
     let parsed: ParsedEvent
     let calendar: CalendarInfo?
+    var isReminder = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 6) {
-                Circle().fill(calendar.map { Color($0.color) } ?? .secondary).frame(width: 8, height: 8)
-                Text(parsed.title).font(.caption.weight(.semibold)).lineLimit(1)
-                if let calendar { Text(calendar.title).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
+        HStack(alignment: .top, spacing: 12) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(calendar.map { Color($0.color) } ?? Color.accentColor).frame(width: 5)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(parsed.title).font(.headline).lineLimit(2)
+                HStack(spacing: 6) {
+                    chip(parsed.summary, "clock")
+                    if let l = parsed.location { chip(l, "mappin") }
+                    if let calendar { chip(calendar.title, "circle.fill", tint: Color(calendar.color)) }
+                }
             }
-            HStack(spacing: 6) {
-                Text(parsed.summary).font(.caption).monospacedDigit()
-                if let l = parsed.location { Label(l, systemImage: "mappin").labelStyle(.titleAndIcon).font(.caption).lineLimit(1) }
-            }.foregroundStyle(.secondary)
+            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(12)
+        .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Preview: \(parsed.title), \(parsed.summary)")
     }
+
+    private func chip(_ text: String, _ icon: String, tint: Color? = nil) -> some View {
+        Label(text, systemImage: icon).labelStyle(.titleAndIcon).font(.caption).lineLimit(1)
+            .foregroundStyle(tint ?? .secondary)
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(.background.opacity(0.7), in: Capsule())
+    }
 }
+
+/// Tappable example phrases (fill the field; never create anything).
+struct FlowChips: View {
+    let items: [String]
+    let pick: (String) -> Void
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(items, id: \.self) { t in
+                Button { pick(t) } label: {
+                    Text(t).font(.callout).padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(.quaternary.opacity(0.6), in: Capsule())
+                }.buttonStyle(.plain)
+            }
+        }
+    }
+}
+#endif

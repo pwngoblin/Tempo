@@ -157,24 +157,36 @@ struct NextEventView: View {
     private var small: some View {
         VStack(alignment: .leading, spacing: 3) {
             if entry.access != .full { NoAccessView() }
-            else if let cur = entry.current {
-                status("NOW", color: cur.color)
-                Text(cur.title).font(.headline).lineLimit(2)
-                Spacer(minLength: 0)
-                if o.countdown != .off {
-                    Text("ends in").font(.caption2).foregroundStyle(.secondary)
-                    CountdownText(date: cur.end, style: o.countdown).font(.title2.weight(.semibold))
+            else if let focus = entry.current ?? entry.next {
+                let isNow = entry.current != nil
+                HStack(spacing: 4) {
+                    status(isNow ? "NOW" : "NEXT", color: focus.color)
+                    Spacer(minLength: 0)
+                    if o.showMeetingIcon, let link = focus.meetingLink {
+                        Image(systemName: link.provider.symbol).font(.caption2).foregroundStyle(.secondary).widgetAccentable()
+                    }
                 }
-                Text(o.window(cur)).font(.caption2).foregroundStyle(.secondary)
-            } else if let next = entry.next {
-                status("NEXT", color: next.color)
-                Text(next.title).font(.headline).lineLimit(2)
-                Spacer(minLength: 0)
-                if o.countdown != .off {
-                    Text("starts in").font(.caption2).foregroundStyle(.secondary)
-                    CountdownText(date: next.start, style: o.countdown).font(.title2.weight(.semibold))
+                Text(focus.title).font(.headline).lineLimit(2)
+                if o.showLocation, let place = focus.location, !place.isEmpty, focus.meetingLink == nil || !isNow {
+                    Label(place, systemImage: "mappin").labelStyle(.titleAndIcon).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                 }
-                Text(o.window(next)).font(.caption2).foregroundStyle(.secondary)
+                if o.showCalendarName, !focus.calendarTitle.isEmpty {
+                    Label(focus.calendarTitle, systemImage: "circle.fill").labelStyle(.titleAndIcon).font(.caption2)
+                        .foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                if isNow, !reduced {
+                    ProgressView(timerInterval: focus.start...max(focus.end, focus.start.addingTimeInterval(1)), countsDown: false) { EmptyView() } currentValueLabel: { EmptyView() }
+                        .progressViewStyle(.linear).tint(o.color(focus.color))
+                }
+                if o.countdown != .off {
+                    Text(isNow ? "ends in" : "starts in").font(.caption2).foregroundStyle(.secondary)
+                    CountdownText(date: isNow ? focus.end : focus.start, style: o.countdown).font(.title3.weight(.semibold))
+                }
+                Text(o.window(focus) + (focus.isAllDay ? "" : " · \(durationText(focus))")).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                if o.showFollowing, let f = entry.following {
+                    Text("Then \(o.time(f.start)) \(f.title)").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                }
             } else {
                 Image(systemName: "checkmark.circle.fill").font(.title).foregroundStyle(.green).widgetAccentable()
                 Text("Free").font(.headline)
@@ -182,6 +194,11 @@ struct NextEventView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private func durationText(_ e: EventItem) -> String {
+        let m = Int(e.end.timeIntervalSince(e.start) / 60)
+        return m >= 60 ? (m % 60 == 0 ? "\(m / 60)h" : "\(m / 60)h \(m % 60)m") : "\(m)m"
     }
 
     private var medium: some View {

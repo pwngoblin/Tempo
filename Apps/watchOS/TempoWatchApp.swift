@@ -29,14 +29,23 @@ struct WatchContentView: View {
             if manager.eventAccess != .full { AccessPrompt() }
             else {
                 let today = cal.startOfDay(for: .now)
-                let events = manager.events(from: today, to: cal.date(byAdding: .day, value: 1, to: today)!)
-                    .filter { $0.isAllDay || $0.end > .now }
+                let tomorrow = cal.date(byAdding: .day, value: 1, to: today)!
+                let all = manager.events(from: today, to: cal.date(byAdding: .day, value: 2, to: today)!)
+                let events = all.filter { $0.start < tomorrow && ($0.isAllDay || $0.end > .now) }
+                let later = all.filter { $0.start >= tomorrow }
                 let focus = Agenda.current(events, at: .now) ?? Agenda.next(events, after: .now)
                 List {
                     NowNextCard(events: events)
                         .listRowBackground(Color.clear)
                     if !events.isEmpty {
-                        Section("Today") { ForEach(events) { EventRow(event: $0) } }
+                        Section {
+                            ForEach(events) { e in NavigationLink { WatchEventDetail(event: e) } label: { EventRow(event: e) } }
+                        } header: { DaySummary(events: events) }
+                    }
+                    if !later.isEmpty {
+                        Section("Tomorrow · \(later.count)") {
+                            ForEach(later) { e in NavigationLink { WatchEventDetail(event: e) } label: { EventRow(event: e) } }
+                        }
                     }
                     Section {
                         SetPicker()
@@ -53,6 +62,61 @@ struct WatchContentView: View {
                 .sheet(isPresented: $adding) {
                     ScrollView { QuickAddView { adding = false }.padding() }.environment(manager)
                 }
+            }
+        }
+    }
+}
+
+/// "3 left · Free until 14:00" style header for today's list.
+struct DaySummary: View {
+    let events: [EventItem]
+    var body: some View {
+        let now = Date.now
+        let left = events.filter { !$0.isAllDay && $0.end > now }.count
+        let status: String = {
+            if let b = Agenda.busyUntil(events, at: now) { return "Busy until \(b.timeText)" }
+            if let f = Agenda.freeUntil(events, at: now) { return "Free until \(f.timeText)" }
+            return "Free"
+        }()
+        Text("Today · \(left) left · \(status)").lineLimit(2)
+    }
+}
+
+/// Everything we know about one event, readable at a glance on the wrist.
+struct WatchEventDetail: View {
+    let event: EventItem
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 6) {
+                    RoundedRectangle(cornerRadius: 2).fill(Color(event.color)).frame(width: 4, height: 18)
+                    Text(event.calendarTitle).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Text(event.title).font(.headline)
+                row("clock", event.isAllDay ? "All day" : event.timeRangeText, sub: event.isAllDay ? nil : duration)
+                if let l = event.location, !l.isEmpty { row("mappin.and.ellipse", l) }
+                if let m = event.meetingLink { row(m.provider.symbol, m.provider.name, sub: m.url.host) }
+                if event.hasRecurrence { row("repeat", "Repeats") }
+                if !event.isAllDay, event.end > .now {
+                    let isNow = event.start <= .now
+                    (Text(isNow ? "Ends in " : "Starts in ") + Text(isNow ? event.end : event.start, style: .timer).monospacedDigit())
+                        .font(.footnote.weight(.semibold)).foregroundStyle(Color(event.color))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .navigationTitle("Event")
+    }
+    private var duration: String {
+        let m = Int(event.end.timeIntervalSince(event.start) / 60)
+        return m >= 60 ? (m % 60 == 0 ? "\(m / 60) h" : "\(m / 60) h \(m % 60) min") : "\(m) min"
+    }
+    private func row(_ icon: String, _ text: String, sub: String? = nil) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: icon).frame(width: 18).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(text).font(.footnote)
+                if let sub { Text(sub).font(.caption2).foregroundStyle(.secondary) }
             }
         }
     }
@@ -75,9 +139,21 @@ struct NowNextCard: View {
 
     private func block(_ tag: String, _ e: EventItem, label: String, date: Date) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(tag).font(.caption2.weight(.bold)).foregroundStyle(Color(e.color))
+            HStack(spacing: 4) {
+                Text(tag).font(.caption2.weight(.bold)).foregroundStyle(Color(e.color))
+                if let m = e.meetingLink { Image(systemName: m.provider.symbol).font(.caption2).foregroundStyle(.secondary) }
+            }
             Text(e.title).font(.headline).lineLimit(2)
+            Text(e.timeRangeText).font(.footnote.monospacedDigit()).foregroundStyle(.secondary)
+            if let l = e.location, !l.isEmpty { Label(l, systemImage: "mappin").labelStyle(.titleAndIcon).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
             (Text("\(label) ").foregroundStyle(.secondary) + Text(date, style: .timer).monospacedDigit()).font(.footnote)
+            if tag == "NOW", !e.isAllDay {
+                ProgressView(timerInterval: e.start...max(e.end, e.start.addingTimeInterval(1)), countsDown: false) { EmptyView() } currentValueLabel: { EmptyView() }
+                    .tint(Color(e.color))
+            }
+            if let f = events.filter({ $0.id != e.id }).first(where: { $0.start >= e.end || ($0.start > e.start) }) {
+                Text("Then \(f.start.timeText) \(f.title)").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+            }
         }
     }
 }

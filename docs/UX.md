@@ -57,3 +57,10 @@ Widgets read the same values (`PrefsSnapshot`), so week start and 12/24-hour agr
 | Reset | "Reset All Customization…" (never touches calendar data) |
 
 Hiding a calendar only filters what Tempo shows (`CalendarVisibility`); it never edits the calendar.
+
+## Quick add (redesigned)
+Large field with a leading icon and clear button → a **preview card** (calendar-coloured edge, title, chips for time / place / calendar) → an explicit **Add** button (also Return). While nothing parses, tappable example phrases fill the field (they never create anything). Watch: compact preview plus a "Send to iPhone" button.
+
+## Information density (watch + widgets)
+- **Watch app:** the Now/Next card shows time range, place, meeting provider, a live progress bar for the current event and a "Then …" line. The list header reads "Today · N left · Free/Busy until …", a Tomorrow section follows, and tapping any row opens a detail page (calendar, duration, place, meeting host, repeat, countdown). Rows show place or meeting provider.
+- **Small Next Event widget:** now honours the existing toggles — Locations, Calendar names, Meeting icon, Following event — and adds a progress bar for the current event plus duration. Turn them on/off per widget in Edit Widget.
