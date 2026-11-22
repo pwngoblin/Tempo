@@ -64,3 +64,6 @@ Privacy keys (`NSCalendarsFullAccessUsageDescription`, `NSRemindersFullAccessUsa
 Built for all three platforms and unit-tested, but not launched on hardware: permission prompts, widget data access
 (widgets rely on the app's Calendar grant; on macOS the extension has the calendars entitlement), complications on a real watch,
 and watch ⇄ phone delivery need a signed run. Add an iPhone/Watch simulator pair or device to test WatchConnectivity.
+
+## License
+MIT, see [LICENSE](LICENSE).
