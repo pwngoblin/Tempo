@@ -66,12 +66,7 @@ struct CustomWidget: Widget {
         AppIntentConfiguration(kind: "TempoCustom", intent: PickCustomWidgetIntent.self, provider: CustomProvider()) { entry in
             SpecWidgetView(entry: entry)
                 .widgetURL(DeepLink.today.url)
-                .containerBackground(for: .widget) {
-                    ZStack {
-                        Rectangle().fill(.fill.tertiary)
-                        if let tint = entry.spec?.background { tint.swiftUI.opacity(0.18) }
-                    }
-                }
+                .containerBackground(for: .widget) { SpecBackground(spec: entry.spec) }
         }
         .configurationDisplayName("Custom")
         .description("A widget you designed yourself in Tempo → Settings → Widgets.")

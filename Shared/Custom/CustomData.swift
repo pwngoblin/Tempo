@@ -2,16 +2,12 @@ import Foundation
 import CalendarCore
 import Widgetry
 
-/// Where the user's custom widget specs live (App Group, so widgets can read them). Falls back to Application Support
-/// when the App Group isn't available (unsigned builds), so the editor still works.
+/// Where the user's custom widget specs live: the App Group's shared `UserDefaults` (the same channel Calendar Sets
+/// use), so widgets can read them. Not a file: a sandboxed Mac app launched normally is denied creating files in the
+/// group container (NSCocoaErrorDomain 513).
 enum TempoSpecStore {
     static let shared: SpecStore = {
-        let store: SpecStore
-        if let s = SpecStore(appGroup: AppGroup.identifier) { store = s }
-        else {
-            let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
-            store = SpecStore(directory: dir.appendingPathComponent("Tempo", isDirectory: true))
-        }
+        let store = SpecStore(defaults: AppGroup.defaults)
         store.onChange = { WidgetryReload.reload() }
         return store
     }()
